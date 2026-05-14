@@ -72,8 +72,7 @@ a sorted bundle `.zip` against a real Reddit export.
 - Per-comment retry loop: up to `retry_threshold` attempts on parse / range
   failures. Final failure → `Classification(errored=True, error_message=...)`
   with empty `scores`.
-- Returns a flat `list[Classification]`. Sorting and threshold-filtering
-  happen in the output layer (cleaner separation, easier to test).
+- Returns a flat `list[Classification]`. 
 - Progress logging so a multi-hour run is observable (count processed /
   errored / current rate).
 

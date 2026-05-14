@@ -23,7 +23,7 @@ class Classification:
     """Result of running one comment through the classifier."""
 
     comment: Comment
-    scores: dict[int, float]
+    scores: dict[int, float] | None
     errored: bool = False
     error_message: str | None = None
 

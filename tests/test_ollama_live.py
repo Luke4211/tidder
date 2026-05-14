@@ -49,6 +49,26 @@ async def test_live_classify_obvious_pii(provider: OllamaProvider):
     assert scores[0] > scores[1]
 
 
+async def test_live_classify_subtle_pii(provider: OllamaProvider):
+    buckets = [
+        "Anything that could possibly constitute personally identifying information.",
+        "overtly political rhetoric",
+    ]
+    scores = await provider.classify(
+        "Bill Burr went to the same highschool I did, although he graduated the year before I started highschool.",
+        buckets,
+    )
+
+    scores_2 = await provider.classify(
+        "Tom and Jerry was my favorite cartoon as a kid! I used to watch it every Sunday at my grandmother's house.",
+        buckets,
+    )
+
+    print(f"\nPII test scores: {scores}")
+    assert scores[0] > 0.75
+    assert scores_2[0] < 0.25
+
+
 async def test_live_classify_innocuous(provider: OllamaProvider):
     buckets = [
         "personally identifying information",
