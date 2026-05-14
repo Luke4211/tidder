@@ -1,2 +1,14 @@
 venv/
 uploads/*
+!uploads/.gitkeep
+outputs/*
+!outputs/.gitkeep
+.vscode/
+
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+build/
+dist/
