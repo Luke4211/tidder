@@ -78,10 +78,17 @@ a sorted bundle `.zip` against a real Reddit export.
 
 ### 1.4 Output bundle writer — [src/tidder/io/output_bundle.py](../src/tidder/io/output_bundle.py)
 
-- `write_bundle(output_dir, classifications, metadata, confidence_threshold)`:
-  - Partition classifications: errored, kept (max score ≥ threshold),
-    dropped (max score < threshold, not written anywhere).
-  - Sort kept by `max_score` DESC.
+The classifier already filters by `confidence_threshold` and discards
+sub-threshold comments, so the bundle writer just splits flagged vs.
+errored and serializes them. The original archive is the implicit "kept"
+set — any comment not in `flagged_comments.csv` is kept on Reddit. This
+keeps output bundles small and lets future runs avoid re-classifying
+previously-handled IDs by reading prior bundles' flagged ID list.
+
+- `write_bundle(output_dir, classifications, metadata)`:
+  - Partition classifications by `errored`. Flagged = successful
+    classifications (already above-threshold). Errored = failed.
+  - Sort flagged by `max_score` DESC.
   - Write `flagged_comments.csv` using `FLAGGED_COLUMNS` from
     [csv_schema.py](../src/tidder/io/csv_schema.py); `flagged_for_del`
     defaults to `true`.
@@ -91,8 +98,9 @@ a sorted bundle `.zip` against a real Reddit export.
   - Zip them into a single archive named
     `{source_archive_stem}_{timestamp}.zip` inside `output_dir`. Return the
     archive path.
-- Also implement `read_bundle()` (needed by `remove`): extract to a temp
-  dir, return paths to the CSVs + metadata.
+- Also implement `read_bundle()` (needed by `remove` and future
+  `--exclude-bundle` re-run support): extract to a temp dir, return paths
+  to the CSVs + metadata.
 
 ### 1.5 Wire `process._run_async` — [src/tidder/commands/process.py](../src/tidder/commands/process.py)
 

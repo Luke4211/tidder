@@ -7,6 +7,7 @@ import typer
 from . import __version__
 from .commands import process as process_cmd
 from .commands import remove as remove_cmd
+from .commands import sample as sample_cmd
 
 app = typer.Typer(
     name="tidder",
@@ -21,6 +22,11 @@ app.command("process", help="Classify comments and emit a flagged-comments bundl
 app.command("remove", help="Overwrite or delete flagged comments via the Reddit API.")(
     remove_cmd.run
 )
+
+app.command(
+    "sample",
+    help="Create an archive from a random sample of comments from the full archive. Useful to test models/parameters before committing to a full run.",
+)(sample_cmd.run)
 
 
 @app.callback()

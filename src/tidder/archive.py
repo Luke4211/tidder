@@ -10,6 +10,7 @@ from __future__ import annotations
 import csv
 import io
 import zipfile
+import random
 from collections.abc import Iterator
 from datetime import datetime, timezone
 from pathlib import Path
@@ -68,3 +69,8 @@ def count_comments(archive_path: Path) -> int:
             reader = csv.reader(io.TextIOWrapper(raw, encoding="utf-8", newline=""))
             next(reader)  # skip header row
             return sum(1 for row in reader if row[_BODY_COL] not in _SKIP_BODIES)
+
+
+def random_sample(archive_path: Path, size: int) -> list[Comment]:
+    comments = list(iter_comments(archive_path))
+    return random.sample(comments, size)

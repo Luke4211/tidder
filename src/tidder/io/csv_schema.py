@@ -8,7 +8,7 @@ FLAGGED_COLUMNS = (
     "confidence_mapping",
     "comment_text",
     "comment_date",
-    "upvotes",
+    "subreddit",
     "flagged_for_del",
 )
 
@@ -18,6 +18,14 @@ ERRORED_COLUMNS = (
     "comment_text",
     "comment_date",
     "error_message",
+)
+
+SAMPLE_COLUMNS = (
+    "id",
+    "permalink",
+    "body",
+    "subreddit",
+    "date",
 )
 
 

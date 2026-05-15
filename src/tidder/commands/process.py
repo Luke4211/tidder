@@ -3,12 +3,18 @@
 from __future__ import annotations
 
 import asyncio
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Annotated
 
 import typer
+from rich.console import Console
 
-from ..config import load_settings
+from ..classifier import run_classification
+from ..config import Settings, load_settings
+from ..io.output_bundle import write_bundle
+from ..llm import get_provider
+from ..models import RunMetadata
 
 
 def run(
@@ -99,5 +105,51 @@ def run(
     asyncio.run(_run_async(archive, buckets, settings))
 
 
-async def _run_async(archive: Path, buckets: list[str], settings) -> None:
-    raise NotImplementedError("process.run is not implemented yet.")
+async def _run_async(
+    archive: Path, buckets: list[str], settings: Settings
+) -> None:
+    console = Console()
+
+    provider = get_provider(
+        settings.llm_provider,
+        model=settings.llm_model,
+        host=settings.llm_host,
+    )
+
+    metadata = RunMetadata(
+        started_at=datetime.now(timezone.utc),
+        finished_at=None,
+        source_archive=archive.name,
+        llm_provider=settings.llm_provider,
+        llm_model=settings.llm_model or "",
+        llm_host=settings.llm_host,
+        confidence_threshold=settings.confidence_threshold,
+        retry_threshold=settings.retry_threshold,
+        concurrency=settings.concurrency,
+        buckets=buckets,
+    )
+
+    try:
+        classifications = await run_classification(
+            archive,
+            buckets,
+            provider,
+            concurrency=settings.concurrency,
+            confidence_threshold=settings.confidence_threshold,
+            retry_threshold=settings.retry_threshold,
+        )
+    finally:
+        await provider.aclose()
+
+    metadata.finished_at = datetime.now(timezone.utc)
+    bundle_path = write_bundle(settings.outputs_dir, classifications, metadata)
+
+    flagged_count = sum(1 for c in classifications if not c.errored)
+    errored_count = sum(1 for c in classifications if c.errored)
+
+    console.print()
+    console.print(f"[bold green]✓[/] Wrote bundle to [cyan]{bundle_path}[/]")
+    console.print(f"  [green]flagged: {flagged_count}[/]  [red]errored: {errored_count}[/]")
+    console.print()
+    console.print("Next: review the bundle, then run:")
+    console.print(f"  [bold]tidder remove --input {bundle_path}[/]")
